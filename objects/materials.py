@@ -6,9 +6,9 @@ class Materials:
 	
 	# the variables required in the forcing data
 	fields_required = [
-		'material', 
+		'name', 
 		'cv', 
-		'lambda', 
+		'conductivity', 
 		'rho'
 	]
 	

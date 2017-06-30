@@ -1,4 +1,4 @@
-material,cv,lambda,rho
+name,cv,conductivity,rho
 steel,449,80.2,7870
 glas,2250,0.95,12500
 insulator,1300,0.055,270

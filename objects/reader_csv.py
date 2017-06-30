@@ -6,6 +6,8 @@ class Reader_CSV(Reader):
 	
 	type = ''		# indicates what file we are reading, e.g. forcing, horizon or ...
 	
+	options = None
+	
 	loc = ''		# location of the csv file
 	sep = ','		# field separator
 	dec_mark = '.'	# decimal mark
@@ -45,9 +47,11 @@ class Reader_CSV(Reader):
 
 		
 	def load(self):
+		print "    loading "+self.type
 		ds = pa.read_csv(self.loc, sep=self.sep, decimal=self.dec_mark)
 		if 'datetime' in ds.columns and self.type=='forcing':
 			ds.index = pa.to_datetime(ds.datetime)
+			ds.datetime = pa.to_datetime(ds.datetime)
 		elif 'alpha' in ds.columns and self.type=='horizon':
 			ds.index = ds.alpha
 		elif 'material' in ds.columns and self.type=='materials':
