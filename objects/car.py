@@ -145,17 +145,17 @@ class Car:
 			self.walls.append(wall)
 					
 	def initialize(self, T0):
-		self.Q_tm1 = 1007.0*T0*1.16
+		self.Q_tm1 = 1007.0*T0*1.16*self.v
 		for wall in self.walls:
 			wall.initialize(T0)
 			
 	def cair_temp(self):
-		return self.Q_tm1/(1007.0*1.16)
+		return self.Q_tm1/(1007.0*1.16*self.v)
 		
-	def output_cair(self, dtime):
+	def output_cair(self, dtime, ts):
 		if self.output_file is None:
 			self.output_file = open('./dbg/sat_cair.csv', 'w')
-		out = "{:s},{:3.2f}\n".format(dtime.strftime("%Y-%m-%d %H:%M:%S"), self.cair_temp())
+		out = "{:s},{:3.6f},{:3.2f}\n".format(dtime.strftime("%Y-%m-%d %H:%M:%S"), ts, self.cair_temp())
 		self.output_file.write(out)
 	
 	def output_close(self):

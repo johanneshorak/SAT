@@ -37,32 +37,37 @@ class Wall:
 		
 	# this function outputs the layer temperatures and additional information, such as heat fluxes
 	# to a file. If a wall consists of multiple parts each part is saved to a separate file.
-	def debug_to_file(self, dtime, fluxes):
+	def debug_to_file(self, dtime, ts,  fluxes):
 		
 		if self.dbg_file is None:
 			self.dbg_file = []
 			for np, part in enumerate(self.parts):
-				header = "time,"					# generate file header for output csv
+				header = "time,t,"					# generate file header for output csv
 				for nl, layer in enumerate(part):
 					for sl, slayer in enumerate(layer.sublayers_Q_t):
 						header = header+"l{:n}sl{:n},".format(nl+1, sl+1)
 						
-				header = header + "R_S_env,R_L_env,K_env,R_S_int,R_L_int,K_int,\n"
+				header = header + "R_S_env,R_L_env,R_L_S_env,K_env,R_S_int,R_L_int,R_L_S_int,K_int,eta,D,\n"
 				
 				self.dbg_file.append(open('./dbg/wall-'+str(self.id).zfill(2)+'-'+str(np+1).zfill(2)+'.csv', 'w'))
 				self.dbg_file[-1].write(header)
 				
 		for np, part in enumerate(self.parts):
 			out = "{:s},".format(dtime.strftime("%Y-%m-%d %H:%M:%S"))
+			out = out + "{:3.6f},".format(ts)
 			for nl, layer in enumerate(part):
 				for sl, slayer in enumerate(layer.sublayers_Q_t):
 					out = out + "{:2.2f},".format(layer.sl_temp(sl))
 			out = out + "{:3.2f},".format(fluxes["R_S_env"])
 			out = out + "{:3.2f},".format(fluxes["R_L_env"])
+			out = out + "{:3.2f},".format(fluxes["R_L_S_env"])
 			out = out + "{:3.2f},".format(fluxes["K_env"])
 			out = out + "{:3.2f},".format(fluxes["R_S_int"])
 			out = out + "{:3.2f},".format(fluxes["R_L_int"])
+			out = out + "{:3.2f},".format(fluxes["R_L_S_int"])
 			out = out + "{:3.2f},".format(fluxes["K_int"])
+			out = out + "{:3.2f},".format(fluxes["eta"])
+			out = out + "{:3.2f},".format(fluxes["D"])
 			out = out + "\n"
 			self.dbg_file[np].write(out)
 	

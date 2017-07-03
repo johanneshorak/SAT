@@ -57,6 +57,14 @@ class Sun():
 		term1 = np.sin(self.lat*(np.pi/180.0))*np.sin(self.gamma)-np.sin(self.delta)
 		term2 = np.cos(self.lat*(np.pi/180.0))*np.cos(self.gamma)
 		psi = np.arccos(term1/term2)
+		if (self.wozh < 12):
+			psi = psi*-1;
+			
+		psi = psi+np.pi  # 0 deg. is north in our coordinate system => add np.pi to transform to our CS.
+		
+		if psi > 360.0:
+			psi = psi-360
+			
 		self.psi = psi
 		return psi
 	

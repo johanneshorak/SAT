@@ -38,16 +38,19 @@ class Forcing:
 		gammas = np.zeros(n)
 		psis = np.zeros(n)
 		Dh	= np.zeros(n)
+		v_1	= np.zeros(n)
 		for i in range(0, len(self.ds.index.values)):
 			dtime = datetime.utcfromtimestamp((self.ds.ix[i].name - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's'))
 			self.sun.set_datetime(dtime)
 			gammas[i]	= self.sun.gamma
 			psis[i]		= self.sun.psi
 			Dh[i]		= self.ds.ix[i].G-self.ds.ix[i].H
+			v_1[i]		= self.ds.ix[i].v_10*np.log(1/1.5)/np.log(10/1.5)
 			
 		self.ds['gamma'] = gammas
 		self.ds['psi'] = psis
 		self.ds['Dh'] = Dh
+		self.ds['v_1'] = v_1
 
 	# interpolates forcing to current timestep
 	def values_at(self,  dtime):

@@ -7,10 +7,15 @@ import matplotlib.cm as cm
 
 class Environment:
 	
-	
 	horizon	= None
+	
 	dalpha	= None
 	dbeta	= None
+
+	epsilon_l_BLD = 0.94
+	epsilon_l_GND = 0.94
+	
+	reflectivity = 0.2
 
 	na	= None
 	nb	= None
@@ -19,6 +24,10 @@ class Environment:
 	betas	= None
 	ip_hor	= None	# interpolated horizon function
 	
+	ENV_SKY = 0
+	ENV_BLD = 1
+	ENV_GND = 2
+	ENV_VEG = 3
 	
 	map		= None	# 2D array
 					# 0 ... sky
@@ -32,8 +41,8 @@ class Environment:
 		self.dalpha		= dalpha
 		self.dbeta		= dbeta
 		
-		self.alphas	= np.arange(0.0, 360.0, dalpha)
-		self.betas	= np.arange(-90.0, 90.0, dbeta)
+		self.alphas	= np.arange(0.0, 360.0+0.1*dalpha, dalpha)	# make sure that upper bound is 360 by adding a fraction of dalpha
+		self.betas	= np.arange(-180.0, 180.0+0.1*dbeta, dbeta)	# make sure that upper bound is 90 by adding a fraction of dbeta
 		
 		self.na = len(self.alphas)
 		self.nb = len(self.betas)
@@ -55,13 +64,21 @@ class Environment:
 		for ia, alpha in enumerate(self.alphas):
 			for ib, beta in enumerate(self.betas):
 				if beta > self.ip_hor[ia] and beta > 0:
-					self.map[ib, ia] = 0
+					self.map[ib, ia] = self.ENV_SKY
 				elif beta < self.ip_hor[ia] and beta > 0:
-					self.map[ib, ia] = 1
+					self.map[ib, ia] = self.ENV_BLD
 				elif beta <= 0:
-					self.map[ib, ia] = 2
-				
+					self.map[ib, ia] = self.ENV_GND
+		# now repeat the part from 0-90 reverse at 90-180 and the part from -90 to 90 from -90 to -180
+		beta_idx_m90 = int((-90.0-self.betas[0])/self.dbeta)
+		beta_idx_p90 = int((90-self.betas[0])/self.dbeta)
+		for ia, alpha in enumerate(self.alphas):
+			for ib in range(beta_idx_m90, 0, -1):
+				self.map[ib, ia] = self.map[beta_idx_m90+(beta_idx_m90-ib), ia]
+			for ib in range(beta_idx_p90, self.nb, 1):
+				self.map[ib, ia] = self.map[beta_idx_p90-(ib-beta_idx_p90), ia]
 		self.output_environment_map()
+		
 	
 	def output_environment_map(self):
 		plt.pcolormesh(self.alphas, self.betas, self.map)
