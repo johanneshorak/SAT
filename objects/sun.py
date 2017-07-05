@@ -21,27 +21,30 @@ class Sun():
 		self.lon = lon
 		self.lat = lat
 		
+	def to_string(self):
+		return "doy={:3.2f}\tx={:3.2f}\twozh={:3.2f}\tzmin={:3.2f}\tdelta={:3.2f}\tpsi={:3.2f}\tgamma={:3.2f}".format(self.doy, self.x, self.wozh,  self.zmin, (180.0/np.pi)*self.delta, (180.0/np.pi)*self.psi, (180.0/np.pi)*self.gamma)
+		
 	# setting datetime updates all other variables!
 	def set_datetime(self, dtime):
 		self.datetime=dtime
-		self.doy = dtime.now().timetuple().tm_yday
+		self.doy = dtime.timetuple().tm_yday
 		self.x	 = self.doy*0.9856-2.72
-		
 		self.Zmin_update()
 		self.woz_update()
 		self.delta_update()
 		self.gamma_update()
 		self.psi_update()
+		self.to_string()
 		#print "{:2.4f}\t".
 		
 	
 	def Zmin_update(self):
-		term1 = -7.66*np.sin(self.x)
-		term2b = 2.0*self.x+24.99*(np.pi/180.0)+3.83*(np.pi/180.0)*np.sin(self.x)
-		term2a = -9.87*np.sin(term2b)
-		
+		term1 = -7.66*np.sin((np.pi/180.0)*self.x)
+		term2b = (2.0*self.x+24.99+3.83*np.sin((np.pi/180.0)*self.x))
+		term2a = -9.87*np.sin((np.pi/180.0)*term2b)
+				
 		zmin = term1+term2a
-		
+
 		self.zmin = zmin
 		
 		return zmin
@@ -83,8 +86,9 @@ class Sun():
 	
 	# declination
 	def delta_update(self):
-		term1 = self.x-77.51*(np.pi/180.0)+1.92*(np.pi/180.0)*np.sin(self.x)
-		term2 = 0.3978*np.sin(term1)
+		term1 = self.x-77.51+1.92*np.sin((np.pi/180.0)*self.x)
+		term2 = 0.3978*np.sin((np.pi/180.0)*term1)
 		delta = np.arcsin(term2)
 		self.delta = delta
+		
 		return delta

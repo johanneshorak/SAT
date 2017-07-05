@@ -1,6 +1,7 @@
 from objects.reader_csv import Reader_CSV
 from objects.sun import Sun
 from datetime import datetime
+from objects.environment import Environment
 import pandas as pa
 import numpy as np
 
@@ -45,7 +46,7 @@ class Forcing:
 			gammas[i]	= self.sun.gamma
 			psis[i]		= self.sun.psi
 			Dh[i]		= self.ds.ix[i].G-self.ds.ix[i].H
-			v_1[i]		= self.ds.ix[i].v_10*np.log(1/1.5)/np.log(10/1.5)
+			v_1[i]		= self.ds.ix[i].v_10*np.log(1.0/Environment.z0)/np.log(10.0/Environment.z0)
 			
 		self.ds['gamma'] = gammas
 		self.ds['psi'] = psis

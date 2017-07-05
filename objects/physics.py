@@ -20,7 +20,7 @@ class Physics():
 	tpow4_max_t	 = 120.0 + 273.15
 	tpow4_dt	 = 0.5
 	tpow4_lookup = None						# lookup table that contains values of t and t**4
-	
+
 	def __init__(self, environment):
 		self.environment = environment
 		
@@ -268,7 +268,7 @@ class Physics():
 			R_S_gnd = 0.5*self.environment.reflectivity*G
 		elif beta_zenith == 180.0:
 			Ho = 0
-			R_S_gnd = self.environment.reflectivity*G
+			R_S_gnd = 0 #self.environment.reflectivity*G
 			
 		if gamma > horizon:		# sun is above the horizon
 			if eta > 90.0:
@@ -285,4 +285,7 @@ class Physics():
 			
 		return R_S
 			
+
+	def main_loop(self, car, wall):
+		pass
 		

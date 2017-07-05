@@ -23,7 +23,7 @@ options["dalpha"]=10.0
 options["dbeta"]=10.0
 options["write_n"]=int(options["write_dt"]/options["model_dt"])
 options["duration"]=3600.0*3.0
-options["sim_start_dtime"]=datetime(2008, 8, 25, 11, 56)
+options["sim_start_dtime"]=datetime(2008, 8, 25, 11, 30)
 options["lon"] = 16.37
 options["lat"] = 48.20
 
@@ -69,10 +69,11 @@ for ts in range(1, n_ts):
 	if ts % options["write_n"] == 0:
 		timer0_end = time.time()
 		exec_text="exec. time: {:3.1f}".format(timer0_end-timer0_start)
-		#tleft_text="time left: ~{:3.1f}".format((timer0_end-timer0_start)*(1.0-ts/n_ts))
+		tleft = float(n_ts-ts)*(timer0_end-timer0_start)/(60.0*options["write_dt"])
+		tleft_text="time left: ~ {:3.1f} minutes".format(tleft)
 		timer0_start = time.time()
 
-		print "   - timestep {:6n}/{:6n}\t{:s}\t{:s}".format(ts, n_ts, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text)
+		print "   - timestep {:6n}/{:6n}\t{:s}\t{:s}\t{:s}".format(ts, n_ts, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text, tleft_text)
 	
 	
 	out = ""						# output string

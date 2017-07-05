@@ -12,10 +12,12 @@ class Environment:
 	dalpha	= None
 	dbeta	= None
 
-	epsilon_l_BLD = 0.94
-	epsilon_l_GND = 0.94
+	epsilon_l_BLD = 0.94	# long wave emissivity of buildings
+	epsilon_l_GND = 0.94	# long wave emissivity of the ground
 	
-	reflectivity = 0.2
+	z0			  = 0.6		# surface roughness
+	
+	reflectivity = 0.2		# albedo of the environment
 
 	na	= None
 	nb	= None
