@@ -161,11 +161,12 @@ class Car:
 	def output_close(self):
 		self.output_file.close()
 		
-	def to_string(self):
+	def to_string(self, print_walls=False):
 		s='    name:\t\t'+self.general.code+'\n    description:\t'+self.general.description+'\n'
-		s=s+'    dimensions:\t'+str(self.general.l)+' x '+str(self.general.w)+' x '+str(self.general.h)+'\n    oriented:\t'+str(self.general.alpha)+', '+str(self.general.beta)+'\n'
-		for wall in self.walls:
-			s=s+wall.to_string()
+		s=s+'    dimensions:\t\t'+str(self.general.l)+' x '+str(self.general.w)+' x '+str(self.general.h)+'\n    oriented:\t\t'+str(self.general.alpha)+', '+str(self.general.beta)+'\n'
+		if print_walls:
+			for wall in self.walls:
+				s=s+wall.to_string()
 		return s
 		
 

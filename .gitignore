@@ -1,0 +1,9 @@
+*.pyc
+.eric6project/
+SAT.e4p
+__init__.py
+testplot.png
+ipython
+sat.build
+dbg
+old_physics.py

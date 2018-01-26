@@ -106,11 +106,11 @@ class Physics():
 		angle = 90-angle_zenith
 		return angle
 	
-	def R_L_env(self, forcing, alpha, beta_zenith):
+	def R_L_env(self, T_A, T_Gnd, alpha, beta_zenith):
 		beta = self.to_horizon_angle(beta_zenith)						# beta has to be converted to a horizon angle
 		
-		alpha0 = (alpha-90.0+0.0*self.environment.dalpha)%360.0			# adding / substracting halb a step avoids problems
-		alpha1 = (alpha+90.0-0.0*self.environment.dalpha)%360.0
+		alpha0 = (alpha-90.0-0.0*self.environment.dalpha)%360.0			# adding / substracting halb a step avoids problems
+		alpha1 = (alpha+90.0+0.0*self.environment.dalpha)%360.0
 		beta0 = (beta-90.0+0.0*self.environment.dbeta)
 		beta1 = (beta+90.0-0.0*self.environment.dbeta)
 		#print "*"
@@ -128,7 +128,7 @@ class Physics():
 			if beta1 != 180.0:
 				beta1 = beta1%180
 		
-		a0 = self.find_nearest(self.environment.alphas, alpha0)
+		a0 = int(alpha0/self.environment.dalpha)						#self.find_nearest(self.environment.alphas, alpha0)
 		a1 = a0 + int(abs(alpha1-alpha0)/self.environment.dalpha)+1
 	
 		b0 = int((beta0-self.environment.betas[0])/self.environment.dbeta)
@@ -140,11 +140,11 @@ class Physics():
 		# the environment map the current wall faces.
 
 		#print "alpha = ", alpha, " beta = ", beta, " beta_zenith = ", beta_zenith
-		#print "alpha0=", alpha0, " alpha1=", alpha1, " - beta0=", beta0, " beta1=", beta1
-		'''
-		self.map	= np.zeros((a1-a0)*(b1-b0))
-		self.map	= self.map.reshape((b1-b0), (a1-a0))
-		'''
+		#print "alpha0=", alpha0, " alpha1=", self.environment.alphas[a1%self.environment.na], " - beta0=", beta0, " beta1=", beta1
+		
+		#self.map	= np.zeros((a1-a0)*(b1-b0))
+		#self.map	= self.map.reshape((b1-b0), (a1-a0))
+		
 		R_L_env = 0
 		terms =  0
 		
@@ -173,12 +173,12 @@ class Physics():
 				eta_ij = self.eta_ij_map[nb-b0, na-a0]
 				
 				if self.environment.map[b_idx, a_idx] == self.environment.ENV_SKY:
-					esky=self.epsilon_sky(betaj, forcing.T_A)
-					Lij=(1/np.pi)*self.stefan_boltzmann(esky, forcing.T_A)
+					esky=self.epsilon_sky(betaj, T_A)
+					Lij=(1/np.pi)*self.stefan_boltzmann(esky, T_A)
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_BLD:
-					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_BLD, forcing.T_A)
+					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_BLD, T_A)
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_GND:
-					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_GND, forcing.T_Gnd) #forcing.T_Gnd
+					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_GND, T_Gnd) #forcing.T_Gnd
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_VEG:
 					pass
 								
@@ -191,8 +191,8 @@ class Physics():
 				terms = terms + 1
 				R_L_env = R_L_env + Lij_aoi_flx
 		#print "terms = ",terms," R_L_env = ", R_L_env, " ", R_L_env_alt, " ", ((np.pi/180.0)**2)*self.environment.dalpha*self.environment.dbeta
-		
 		'''
+		print R_L_env
 		plt.clf()		
 		plt.pcolormesh(self.map)
 		plt.colorbar()
@@ -200,7 +200,9 @@ class Physics():
 		#plt.ylim([betas[0], betas[-1]])
 		plt.savefig('./dbg/aij_alpha-'+str(alpha)+'_beta-'+str(beta_zenith)+'.png')
 		plt.close()
-
+		sys.exit(0)
+		'''
+		'''
 		plt.clf()		
 		plt.pcolormesh(self.eta_ij_map)
 		plt.colorbar()
@@ -226,14 +228,14 @@ class Physics():
 		self.last_R_L_env = R_L_env
 		return R_L_env
 		
-	def lw_terms(self, forcing, TS, TS_opp, eps_l, eps_l_opp, alpha, beta):
+	def lw_terms(self, T_A, T_Gnd, TS, TS_opp, eps_l, eps_l_opp, alpha, beta):
 		# preliminary we use a really simple approximation for R_env
 
 		R_L_S	= self.stefan_boltzmann(eps_l, TS)		# lw radiation given of by surface
 		
 		if eps_l_opp is None or TS_opp is None:
 			R_L_opp = 0
-			R_L_env = self.R_L_env(forcing, alpha, beta)
+			R_L_env = self.R_L_env(T_A, T_Gnd, alpha, beta)
 		else:
 			R_L_opp	= self.stefan_boltzmann(eps_l_opp, TS_opp)
 			R_L_env = 0
@@ -245,21 +247,17 @@ class Physics():
 		K = (2.8 + 3.0*vw)*(T_air-T_sfc)
 		return K
 	
-	def sw_terms(self, forcing, alpha,  beta_zenith):
-		G = forcing.G
-		Dh = forcing.Dh
-		H = forcing.H							
-		gamma = forcing.gamma										# elevation angle of the sun (rad)
-		psi	  = forcing.psi											# azimuth angle of the sun (rad)
+	def sw_terms(self, G,  Dh, H,  gamma,  psi, alpha,  beta_zenith):
 		horizon = (np.pi/180.0)*self.environment.horizon_at((180.0/np.pi)*psi)	# elevation angle of horizon at psi (degree)
 
-		eta = self.eta(alpha, beta_zenith, (180.0/np.pi)*psi, (180.0/np.pi)*gamma)
+		eta     = self.eta(alpha, beta_zenith, (180.0/np.pi)*psi, (180.0/np.pi)*gamma)
 		self.last_eta = eta
 		
 		# this should at some point be calculated from the environment map
 		# as of now it is only correct for walls parallel or perpendicular to
 		# the ground. Basically the fraction of reflected / diffuse radiation picked
 		# up by a wall depends on how much of the sky/ground it sees.
+		
 		if beta_zenith==0.0:		# top wall doesnt pick up reflected radiation
 			Ho = H
 			R_S_gnd = 0

@@ -15,37 +15,39 @@ import matplotlib.cm as cm
 '''
 
 # options
-options = Bunch()
-options["dx"]=0.001
-options["model_dt"]=1.0
-options["write_dt"]=60.0
-options["dalpha"]=10.0
-options["dbeta"]=10.0
-options["write_n"]=int(options["write_dt"]/options["model_dt"])
-options["duration"]=3600.0*3.0
-options["sim_start_dtime"]=datetime(2008, 8, 25, 11, 30)
-options["lon"] = 16.37
-options["lat"] = 48.20
+options                    = Bunch()
+options["dx"]              = 0.001
+options["model_dt"]        = 1.0
+options["write_dt"]        = 60.0
+options["dalpha"]          = 10.0
+options["dbeta"]           = 10.0
+options["write_n"]         = int(options["write_dt"]/options["model_dt"])
+options["duration"]        = 3600.0*3.0
+options["sim_start_dtime"] = datetime(2008, 8, 25, 11, 30)
+options["lon"]             = 16.37
+options["lat"]             = 48.20
 
 # main files
-forcing_file="./input/v-w-000_forcing_25082008_1156-1700.csv"
-horizon_file="./input/horizon_fct_vu-wien.csv"
-car_file="./input/v-w-000_general.csv"
-body_file="./input/v-w-000_body.csv"
+forcing_file = "./input/v-w-000_forcing_25082008_1156-1700.csv"
+horizon_file = "./input/horizon_fct_vu-wien.csv"
+car_file     = "./input/v-w-000_general.csv"
+body_file    = "./input/v-w-000_body.csv"
 
 print " * initializing"
-forcing = Forcing(options["model_dt"], forcing_file,  options["lon"], options["lat"])
-forcing.ds.to_csv('./dbg/forcing.csv')
-horizon = Horizon(horizon_file)
+forcing     = Forcing(options["model_dt"], forcing_file,  options["lon"], options["lat"])
+horizon     = Horizon(horizon_file)
 environment = Environment(horizon, options.dalpha, options.dbeta)
-physics = Physics(environment)
+physics     = Physics(environment)
+car         = Car(options, car_file, body_file)
 
-car = Car(options, car_file, body_file)
 car.initialize(21.4666)
 
+forcing.ds.to_csv('./dbg/forcing.csv')
 
+# number of timesteps
 n_ts = int(options["duration"]/options["model_dt"])+1
 n_ts = 4*60*60
+
 print ""
 print " * run-info"
 print "    timesteps:\t {:n}".format(n_ts)
@@ -56,10 +58,19 @@ print car.to_string()
 print ""
 print " * time stepping"
 
-
 dt = options["model_dt"]
 
 timer0_start = time.time()
+
+# get everything above locally to improve efficiency
+frc_G     = forcing.G
+frc_H     = forcing.H
+frc_Dh    = forcing.Dh
+frc_T_A   = forcing.T_A
+frc_T_Gnd = forcing.T_Gnd
+frc_gamma = forcing.gamma
+frc_psi   = forcing.psi
+frc_v_1   = forcing.v_1
 
 # loop through all timesteps
 for ts in range(1, n_ts):
@@ -67,16 +78,25 @@ for ts in range(1, n_ts):
 	dtime_cur	= options["sim_start_dtime"]+timedelta(seconds=t)	# actual current time
 	
 	if ts % options["write_n"] == 0:
-		timer0_end = time.time()
-		exec_text="exec. time: {:3.1f}".format(timer0_end-timer0_start)
-		tleft = float(n_ts-ts)*(timer0_end-timer0_start)/(60.0*options["write_dt"])
-		tleft_text="time left: ~ {:3.1f} minutes".format(tleft)
+		timer0_end   = time.time()
+		exec_text    = "time for {:n} steps: ~{:3.1f}s".format(options["write_n"], timer0_end-timer0_start)
+		tleft_min    = float(n_ts-ts)*(timer0_end-timer0_start)/(60.0*options["write_dt"])
+		
+		if tleft_min > 60.0:
+			tleft_hrs    = tleft_min%60
+			tleft_min    = tleft_min-60.0*float(tleft_hrs)
+			tleft_text   = "time left: ~ {:3.1f}h:{:3.1f}m.".format(tleft_hrs, tleft_min)
+		else:
+			tleft_hrs    = 0.0
+			tleft_text   = "time left: ~ {:3.1f} min.".format(tleft_min)
+			
+
 		timer0_start = time.time()
 
-		print "   - timestep {:6n}/{:6n}\t{:s}\t{:s}\t{:s}".format(ts, n_ts, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text, tleft_text)
+		print "   - timestep {:6n}/{:6n}\t{:18s}\t{:26s}\t{:26s}".format(ts, n_ts, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text, tleft_text)
 	
 	
-	out = ""						# output string
+	out          = ""						# output string
 	timer1_start = time.time()
 	
 	for nw,  wall in enumerate(car.walls):	# loop through all walls and layers and calculate/apply the relevant heat fluxes
@@ -104,17 +124,17 @@ for ts in range(1, n_ts):
 					# on the outside. A workaround would be to define two layers of the
 					# same material.
 					if layer.outer == True or layer.inner == True:
-						alpha_s = layer.surface.alpha_s
-						tau_s	= layer.surface.tau_s
-						alpha_l = layer.surface.alpha_l
+						alpha_s   = layer.surface.alpha_s
+						tau_s	  = layer.surface.tau_s
+						alpha_l   = layer.surface.alpha_l
 						epsilon_l = layer.surface.epsilon_l
 					else:
-						alpha_s = 0
-						tau_s = 0
-						alpha_l = 0
+						alpha_s   = 0
+						tau_s     = 0
+						alpha_l   = 0
 						epsilon_l = 0
 					
-					T_i = layer.sl_temp(sl)		# temperature of the current sublayer at the last timestep
+					T_i     = layer.sl_temp(sl)	# temperature of the current sublayer at the last timestep
 					T_cabin = car.cair_temp()	# cabin air temperature at the last timestep
 					
 					C = 0						# conductive heat flux btw. adjacent sublayers (W/m^2)
@@ -128,9 +148,9 @@ for ts in range(1, n_ts):
 					R_L_S_int = 0				# long wave heat flux emitted by sublayer towards interior
 					R_L_S_env = 0				# long wave heat flux emitted by sublayer towards environment
 					
-					th = layer.sl_th					# thickness of the sublayer in (m)
-					l_i = layer.material.conductivity	# thermal conductivity of the sublayers material (W/Km)
-					forcing_cur = forcing.ds.ix[ts]		# interpolated forcing at the current timestep
+					th          = layer.sl_th					# thickness of the sublayer in (m)
+					l_i         = layer.material.conductivity	# thermal conductivity of the sublayers material (W/Km)
+					#forcing_cur = forcing.ds.ix[ts]				# interpolated forcing at the current timestep
 					
 					procedure_applied = ""		# additional information - if this still has no values after
 												# the if blocks below then we encountered a vehicle configuration
@@ -144,7 +164,7 @@ for ts in range(1, n_ts):
 						
 						Cim1 = physics.conduction(T_im1, T_i, layer.material.conductivity,  th)
 						Cip1 = physics.conduction(T_i, T_ip1, layer.material.conductivity,  th)
-						C = Cim1-Cip1
+						C    = Cim1-Cip1
 					else:
 						if sl == 0 and layer.outer and sn > 1:
 							# sublayer is the outermost and faces the environment but does not face the interior
@@ -152,10 +172,37 @@ for ts in range(1, n_ts):
 							
 							T_ip1 = layer.sl_temp(sl+1)
 							
-							C		= physics.conduction(T_i, T_ip1, layer.material.conductivity,  th)
-							R_S_env	= physics.sw_terms(forcing_cur, alpha, beta)
-							R_L_env,  R_L_S_env = physics.lw_terms(forcing_cur, T_i, None, epsilon_l, None, alpha,  beta)
-							K_env	= physics.convection(forcing_cur.T_A, T_i, forcing_cur.v_1)
+							C		= physics.conduction(
+														T_i,
+														T_ip1,
+														layer.material.conductivity,
+														th
+													)
+							R_S_env	= physics.sw_terms(
+														frc_G[ts],
+														frc_Dh[ts],
+														frc_H[ts],
+														frc_gamma[ts],
+														frc_psi[ts], 
+														alpha,
+														beta
+													)
+							R_L_env,  R_L_S_env = physics.lw_terms(
+														frc_T_A[ts],
+														frc_T_Gnd[ts],
+														T_i,
+														None,
+														epsilon_l,
+														None,
+														alpha,
+														beta
+													)
+							K_env	= physics.convection(
+														frc_T_A[ts],
+														T_i,
+														frc_v_1[ts]
+													)
+													
 						elif sl == 0 and layer.outer and sn == 1:
 							# sole sublayer is the outermost and faces the environment but has another adjacent layer inwards
 							procedure_applied = "o2"
@@ -163,10 +210,35 @@ for ts in range(1, n_ts):
 							T_ip1	= part[nl+1].sl_temp(0) # temperature of next layer inwards
 							l_ip1	= part[nl+1].material.conductivity
 
-							C		= -(T_i-T_ip1)*physics.thermal_contact_conductivity(l_i, l_ip1)
-							R_S_env = physics.sw_terms(forcing_cur, alpha, beta)
-							R_L_env,  R_L_S_env  = physics.lw_terms(forcing_cur, T_i, None, epsilon_l, None, alpha,  beta)
-							K_env	= physics.convection(forcing_cur.T_A, T_i, forcing_cur.v_1)
+							C		= -(T_i-T_ip1)*physics.thermal_contact_conductivity(
+														l_i,
+														l_ip1
+													)
+							R_S_env = physics.sw_terms(
+														frc_G[ts],
+														frc_Dh[ts],
+														frc_H[ts],
+														frc_gamma[ts],
+														frc_psi[ts], 
+														alpha,
+														beta
+													)
+							R_L_env,  R_L_S_env  = physics.lw_terms(
+														frc_T_A[ts],
+														frc_T_Gnd[ts],
+														T_i,
+														None,
+														epsilon_l,
+														None,
+														alpha,
+														beta
+													)
+							K_env	= physics.convection(
+														frc_T_A[ts],
+														T_i,
+														frc_v_1[ts]
+													)
+													
 						elif sl == 0 and not layer.outer and sn > 1:
 							# sublayer is the outermost but doesn't face the environment => faces other layer outwards (thermal contact)
 							# => read neccessary thermal properties of this layer and calculate conductivity due to thermal contact.
@@ -188,7 +260,16 @@ for ts in range(1, n_ts):
 							
 							C		= physics.conduction(T_im1, T_i, layer.material.conductivity,  th)
 							R_S_int = 0
-							R_L_int,  R_L_S_int  = physics.lw_terms(forcing_cur, T_i, T_opp, epsilon_l, epsilon_l_opp, alpha,  beta)
+							R_L_int,  R_L_S_int  = physics.lw_terms(
+														frc_T_A[ts],
+														frc_T_Gnd[ts],
+														T_i,
+														T_opp,
+														epsilon_l,
+														epsilon_l_opp,
+														alpha,
+														beta
+													)
 							K_int	= physics.convection(T_cabin, T_i, 0.0)
 						elif sl == 0 and layer.inner and sn == 1:
 							# sole sublayer is the innermost and faces the interior but has another ajdacent layer outward
@@ -202,7 +283,16 @@ for ts in range(1, n_ts):
 
 							C = (T_im1-T_i)*physics.thermal_contact_conductivity(l_i, l_ip1)
 							R_S_int	= 0
-							R_L_int,  R_L_S_int  = physics.lw_terms(forcing_cur, T_i, T_opp, epsilon_l, epsilon_l_opp, alpha,  beta)
+							R_L_int,  R_L_S_int  = physics.lw_terms(
+														frc_T_A[ts],
+														frc_T_Gnd[ts],
+														T_i,
+														T_opp,
+														epsilon_l,
+														epsilon_l_opp,
+														alpha,
+														beta
+													)
 							K_int	= physics.convection(T_cabin, T_i, 0.0)
 						elif sl == sn-1 and not layer.inner and sn > 1:
 							# sublayer is the innermost but doesn't face the interior => faces other layer inwards
@@ -257,7 +347,7 @@ for ts in range(1, n_ts):
 						#print "wall {:2n} part {:2n} layer {:2n} sublayer {:2n} - T = {:5.3f} dQ = {:5.3f} R_S = {:5.3f} R_L = {:5.3f} K = {:5.3f}".format(nw+1, np+1,  nl+1, sl+1, T_i,  dQ, R_S, R_L, K)
 						pass						
 
-		if ts % options["write_n"] == 0:
+		if ts % options["write_n"] == 0 or ts == 0:
 			wall.debug_to_file(dtime_cur, float(ts)*dt/3600.0, fluxes)
 			pass
 	timer1_end = time.time()
