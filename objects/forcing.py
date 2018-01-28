@@ -4,6 +4,7 @@ from datetime import datetime
 from objects.environment import Environment
 import pandas as pa
 import numpy as np
+import objects.utils as utils
 
 class Forcing:
 	
@@ -38,12 +39,13 @@ class Forcing:
 		
 		# interpolate the forcing data to the model timestep
 		# will later be saved to numpy arrays for faster access
+		utils.mwrite('      interpolating...')
 		new_dt    = int(1000.0*model_dt)
 		new_range = pa.date_range(self.ds.index.values[0], self.ds.index.values[-1], freq=str(new_dt)+'ms')
 		self.ds   = self.ds.reindex(new_range)
 		self.ds   = self.ds.interpolate(method='linear')
 		
-		
+		utils.mwrite(' calculating additional quantities...')
 		# calculate other quantities at forcing timestep
 		n        = len(self.ds.index)
 		self.sun = Sun(lon, lat)
@@ -75,6 +77,8 @@ class Forcing:
 		self.gamma = self.ds.gamma.values
 		self.psi   = self.ds.psi.values
 		self.v_1   = self.ds.v_1.values
+		
+		utils.mwrite(' done...\n')
 
 	# interpolates forcing to current timestep
 	def values_at(self,  dtime):

@@ -7,6 +7,8 @@ from objects.horizon import Horizon
 from objects.physics import Physics
 from objects.car import Car
 from objects.environment import Environment
+from optparse import OptionParser
+import numpy as numpy
 '''
 import matplotlib as matplotlib
 import matplotlib.pyplot as plt
@@ -14,25 +16,68 @@ import matplotlib.ticker as mticker
 import matplotlib.cm as cm
 '''
 
+parser = OptionParser()
+parser.add_option("-f", "--forcing", dest="forcing_file", type="string", 
+                  help="location and name of the atmospheric forcing", metavar=">FILE<")
+parser.add_option("--horizon", dest="horizon_file", type="string", 
+                  help="location and name of the horizon function file", metavar=">FILE<")
+parser.add_option("-c","--car", dest="car_file", type="string", 
+                  help="location and name of the car general information file", metavar=">FILE<")
+parser.add_option("-b","--body", dest="body_file", type="string", 
+                  help="location and name of the car body file", metavar=">FILE<")
+parser.add_option("-d","--duration", dest="duration", type="float", default=2.0, 
+                  help="duration of the simulation in hours", metavar=">duration<")
+parser.add_option("-T","--T0", dest="T0", type="float", default=20.0, 
+                  help="initialisation temperature of all components in deg. Celsius", metavar=">T0<")
+parser.add_option("--date", dest="date", type="string",
+                  help="begin of simulation date, format: YYYY-MM-DD", metavar=">date<")
+parser.add_option("--time", dest="time", type="string",
+                  help="begin of simulation time, format: HH:MM", metavar=">time<")
+(cl_options, args) = parser.parse_args()
+
+option_errors=""
+if cl_options.forcing_file is None:
+	option_errors+="  please supply location and name of a forcing file\n"
+if cl_options.car_file is None:
+	option_errors+="  please supply location and name of a car general information file\n"
+if cl_options.body_file is None:
+	option_errors+="  please supply location and name of a car body_file\n"
+
+if option_errors != "":
+	print ""
+	print option_errors
+	sys.exit(1)
+
 # options
 options                    = Bunch()
 options["dx"]              = 0.001
 options["model_dt"]        = 1.0
 options["write_dt"]        = 60.0
-options["dalpha"]          = 10.0
-options["dbeta"]           = 10.0
+options["dalpha"]          = 20.0
+options["dbeta"]           = 20.0
 options["write_n"]         = int(options["write_dt"]/options["model_dt"])
-options["duration"]        = 3600.0*3.0
-options["sim_start_dtime"] = datetime(2008, 8, 25, 11, 30)
+options["duration"]        = 3600.0*cl_options.duration
+options["sim_start_dtime"] = datetime.strptime(cl_options.date+' '+cl_options.time, '%Y-%m-%d %H:%M') # datetime(2008, 8, 25, 11, 30)
 options["lon"]             = 16.37
 options["lat"]             = 48.20
+options["T0"]              = cl_options.T0
 
 # main files
-forcing_file = "./input/v-w-000_forcing_25082008_1156-1700.csv"
-horizon_file = "./input/horizon_fct_vu-wien.csv"
-car_file     = "./input/v-w-000_general.csv"
-body_file    = "./input/v-w-000_body.csv"
+forcing_file = cl_options.forcing_file
+horizon_file = cl_options.horizon_file
+car_file     = cl_options.car_file
+body_file    = cl_options.body_file
 
+# number of timesteps
+n_ts = int(options["duration"]/options["model_dt"])+1
+
+print ""
+print " * run-info"
+print "    start date/time :\t "+str(options["sim_start_dtime"])
+print "    duration        :\t {:2.1f} hours".format(options["duration"]/3600.0)
+print "    timesteps       :\t {:n}".format(n_ts-1)
+
+print ""
 print " * initializing"
 forcing     = Forcing(options["model_dt"], forcing_file,  options["lon"], options["lat"])
 horizon     = Horizon(horizon_file)
@@ -40,20 +85,12 @@ environment = Environment(horizon, options.dalpha, options.dbeta)
 physics     = Physics(environment)
 car         = Car(options, car_file, body_file)
 
-car.initialize(21.4666)
-
-forcing.ds.to_csv('./dbg/forcing.csv')
-
-# number of timesteps
-n_ts = int(options["duration"]/options["model_dt"])+1
-n_ts = 4*60*60
-
-print ""
-print " * run-info"
-print "    timesteps:\t {:n}".format(n_ts)
+car.initialize(options["T0"])
 print ""
 print " * simulated vehicle"
-print car.to_string()
+print car.to_string(True)
+
+forcing.ds.to_csv('./dbg/forcing.csv')
 
 print ""
 print " * time stepping"
@@ -63,14 +100,29 @@ dt = options["model_dt"]
 timer0_start = time.time()
 
 # get everything above locally to improve efficiency
-frc_G     = forcing.G
-frc_H     = forcing.H
-frc_Dh    = forcing.Dh
-frc_T_A   = forcing.T_A
-frc_T_Gnd = forcing.T_Gnd
-frc_gamma = forcing.gamma
-frc_psi   = forcing.psi
-frc_v_1   = forcing.v_1
+# and use only forcing from sim_start_time onward
+dtime_diff = (options["sim_start_dtime"]-forcing.ds.index[0].to_pydatetime()).total_seconds()
+dtime_idx  = int(dtime_diff/options["model_dt"])
+if dtime_diff < 0:
+	print ' error: simulation start datetime set before minimum forcing datetime'
+	sys.exit(2)
+elif dtime_idx > len(forcing.G):
+	print ' error: simulation start datetime set after maximum forcing datetime'
+	sys.exit(2)
+	
+#print dtime_diff
+#print "dtime should be at ", (dtime_diff/options["model_dt"])
+#print forcing.ds.index[int(dtime_diff/options["model_dt"])]
+frc_G     = forcing.G[dtime_idx:]
+frc_H     = forcing.H[dtime_idx:]
+frc_Dh    = forcing.Dh[dtime_idx:]
+frc_T_A   = forcing.T_A[dtime_idx:]
+frc_T_Gnd = forcing.T_Gnd[dtime_idx:]
+frc_gamma = forcing.gamma[dtime_idx:]
+frc_psi   = forcing.psi[dtime_idx:]
+frc_v_1   = forcing.v_1[dtime_idx:]
+
+timer1_start = time.time()
 
 # loop through all timesteps
 for ts in range(1, n_ts):
@@ -83,21 +135,20 @@ for ts in range(1, n_ts):
 		tleft_min    = float(n_ts-ts)*(timer0_end-timer0_start)/(60.0*options["write_dt"])
 		
 		if tleft_min > 60.0:
-			tleft_hrs    = tleft_min%60
+			tleft_hrs    = numpy.floor(tleft_min/60.0)
 			tleft_min    = tleft_min-60.0*float(tleft_hrs)
-			tleft_text   = "time left: ~ {:3.1f}h:{:3.1f}m.".format(tleft_hrs, tleft_min)
+			tleft_text   = "time left: ~ {:3.0f}h:{:3.0f}m.".format(tleft_hrs, tleft_min)
 		else:
 			tleft_hrs    = 0.0
-			tleft_text   = "time left: ~ {:3.1f} min.".format(tleft_min)
+			tleft_text   = "time left: ~ {:3.0f} min.".format(tleft_min)
 			
 
 		timer0_start = time.time()
 
-		print "   - timestep {:6n}/{:6n}\t{:18s}\t{:26s}\t{:26s}".format(ts, n_ts, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text, tleft_text)
+		print "   - timestep {:6n}/{:6n}\t{:18s}\t{:26s}\t{:26s}".format(ts, n_ts-1, dtime_cur.strftime("%Y-%m-%d %H:%M:%S"), exec_text, tleft_text)
 	
 	
 	out          = ""						# output string
-	timer1_start = time.time()
 	
 	for nw,  wall in enumerate(car.walls):	# loop through all walls and layers and calculate/apply the relevant heat fluxes
 		
@@ -126,8 +177,13 @@ for ts in range(1, n_ts):
 					if layer.outer == True or layer.inner == True:
 						alpha_s   = layer.surface.alpha_s
 						tau_s	  = layer.surface.tau_s
-						alpha_l   = layer.surface.alpha_l
 						epsilon_l = layer.surface.epsilon_l
+						
+						if layer.inner == False:                # on the outside we use the defined long wave absorptivity
+							alpha_l   = layer.surface.alpha_l
+						else: 									# we assume the inside to act as a black body
+							alpha_l   = 1.0
+						
 					else:
 						alpha_s   = 0
 						tau_s     = 0
@@ -350,9 +406,6 @@ for ts in range(1, n_ts):
 		if ts % options["write_n"] == 0 or ts == 0:
 			wall.debug_to_file(dtime_cur, float(ts)*dt/3600.0, fluxes)
 			pass
-	timer1_end = time.time()
-	#print "\twallloop: {:3.1f}".format(timer1_end-timer1_start)
-
 
 	car.Q_t = car.Q_tm1 + K_sum
 	car.Q_tm1 = car.Q_t
@@ -373,6 +426,9 @@ car.walls[3].debug_file_close()
 car.walls[4].debug_file_close()
 car.walls[5].debug_file_close()
 car.output_close()
+
+timer1_end = time.time()
+print "\telapsed time: {:3.1f} minutes".format((timer1_end-timer1_start)/60.0)
 
 
 #print forcing.ds

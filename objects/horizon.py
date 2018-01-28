@@ -1,4 +1,5 @@
 from objects.reader_csv import Reader_CSV
+import pandas as pd
 
 class Horizon:
 
@@ -13,8 +14,11 @@ class Horizon:
 	ds = None
 	
 	def __init__(self, csv_loc):
-		self.reader = Reader_CSV(csv_loc, self.fields_required, 'horizon')
-		self.ds = self.reader.load()
+		if not(csv_loc is None):
+			self.reader = Reader_CSV(csv_loc, self.fields_required, 'horizon')
+			self.ds = self.reader.load()
+		else:
+			self.ds = pd.DataFrame(columns=['alpha', 'gamma'], data=[[0, 0], [180, 0], [270, 0]])
 		
 
 		

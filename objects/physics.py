@@ -1,9 +1,5 @@
 import numpy as np
-import time
-import matplotlib as matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-import matplotlib.cm as cm
+
 
 class Physics():
 
@@ -109,7 +105,7 @@ class Physics():
 	def R_L_env(self, T_A, T_Gnd, alpha, beta_zenith):
 		beta = self.to_horizon_angle(beta_zenith)						# beta has to be converted to a horizon angle
 		
-		alpha0 = (alpha-90.0-0.0*self.environment.dalpha)%360.0			# adding / substracting halb a step avoids problems
+		alpha0 = (alpha-90.0-0.0*self.environment.dalpha)%360.0			# adding / substracting halve a step avoids problems
 		alpha1 = (alpha+90.0+0.0*self.environment.dalpha)%360.0
 		beta0 = (beta-90.0+0.0*self.environment.dbeta)
 		beta1 = (beta+90.0-0.0*self.environment.dbeta)
@@ -178,7 +174,7 @@ class Physics():
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_BLD:
 					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_BLD, T_A)
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_GND:
-					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_GND, T_Gnd) #forcing.T_Gnd
+					Lij=(1/np.pi)*self.stefan_boltzmann(self.environment.epsilon_l_GND, T_Gnd) # in ICOV T_Gnd was erroneously = T_A. Setting T_A here leads to ICOV behaviour
 				elif self.environment.map[b_idx, a_idx] == self.environment.ENV_VEG:
 					pass
 								
@@ -233,10 +229,11 @@ class Physics():
 
 		R_L_S	= self.stefan_boltzmann(eps_l, TS)		# lw radiation given of by surface
 		
-		if eps_l_opp is None or TS_opp is None:
+		if eps_l_opp is None or TS_opp is None:			# considering outer surface
 			R_L_opp = 0
 			R_L_env = self.R_L_env(T_A, T_Gnd, alpha, beta)
-		else:
+		else:											# considering inner surface
+			#eps_l_opp = 1.0							# assume: inside is blackbody
 			R_L_opp	= self.stefan_boltzmann(eps_l_opp, TS_opp)
 			R_L_env = 0
 
@@ -262,15 +259,15 @@ class Physics():
 			Ho = H
 			R_S_gnd = 0
 		elif beta_zenith == 90.0:
-			Ho = 0.5*H
-			R_S_gnd = 0.5*self.environment.reflectivity*G
+			Ho = H
+			R_S_gnd = self.environment.reflectivity*G
 		elif beta_zenith == 180.0:
 			Ho = 0
 			R_S_gnd = 0 #self.environment.reflectivity*G
 			
 		if gamma > horizon:		# sun is above the horizon
 			if eta > 90.0:
-				R_S_sky = 0
+				R_S_sky = Ho # 0
 				self.last_D = 0
 			else:
 				R_S_sky = np.cos((np.pi/180.0)*eta)*Dh + Ho
