@@ -154,7 +154,7 @@ class Car:
 		
 	def output_cair(self, dtime, ts):
 		if self.output_file is None:
-			self.output_file = open('./dbg/sat_cair.csv', 'w')
+			self.output_file = open(self.options['outpath']+'/sat_cabin_air.csv', 'w')
 		out = "{:s},{:3.6f},{:3.2f}\n".format(dtime.strftime("%Y-%m-%d %H:%M:%S"), ts, self.cair_temp())
 		self.output_file.write(out)
 	

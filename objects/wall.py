@@ -12,7 +12,7 @@ class Wall:
 	beta = None
 	
 	def __init__(self,options,  id,  n_parts):
-		self.options = None
+		self.options = options
 		self.id = id
 		
 		self.parts=[]
@@ -49,7 +49,7 @@ class Wall:
 						
 				header = header + "R_S_env,R_L_env,R_L_S_env,K_env,R_S_int,R_L_int,R_L_S_int,K_int,eta,D,\n"
 				
-				self.dbg_file.append(open('./dbg/wall-'+str(self.id).zfill(2)+'-'+str(np+1).zfill(2)+'.csv', 'w'))
+				self.dbg_file.append(open(self.options['outpath']+'/sat_wall-'+str(self.id).zfill(2)+'-'+str(np+1).zfill(2)+'.csv', 'w'))
 				self.dbg_file[-1].write(header)
 				
 		for np, part in enumerate(self.parts):

@@ -83,12 +83,15 @@ class Environment:
 		
 	
 	def output_environment_map(self):
+		'''
 		f, ax = plt.subplots(1, 1, dpi=200)
 		pcm = ax.pcolormesh(self.alphas, self.betas, self.map)
 		ax.set_xlim(0, 360)
 		ax.set_ylim(-180, 180)
 		f.colorbar(pcm)
 		plt.savefig('./dbg/environment.png')
+		'''
+		pass
 		
 		
 		
