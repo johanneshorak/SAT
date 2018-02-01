@@ -186,46 +186,18 @@ class Physics():
 				
 				terms = terms + 1
 				R_L_env = R_L_env + Lij_aoi_flx
-		#print "terms = ",terms," R_L_env = ", R_L_env, " ", R_L_env_alt, " ", ((np.pi/180.0)**2)*self.environment.dalpha*self.environment.dbeta
-		'''
-		print R_L_env
-		plt.clf()		
-		plt.pcolormesh(self.map)
-		plt.colorbar()
-		#plt.xlim([alphas[0], alphas[-1]])
-		#plt.ylim([betas[0], betas[-1]])
-		plt.savefig('./dbg/aij_alpha-'+str(alpha)+'_beta-'+str(beta_zenith)+'.png')
-		plt.close()
-		sys.exit(0)
-		'''
-		'''
-		plt.clf()		
-		plt.pcolormesh(self.eta_ij_map)
-		plt.colorbar()
-		#plt.xlim([alphas[0], alphas[-1]])
-		#plt.ylim([betas[0], betas[-1]])
-		plt.savefig('./dbg/eta_ij_map.png')
-		'''
-		'''
-		if alpha == 0 and beta_zenith==180:
-			print "*"
-			print R_L_env
-			print " alpha = ", alpha, " beta = ",  beta,  " beta_zenith = ",  beta_zenith
-			print "alpha0=", alpha0, " alpha1=", alpha1, " - beta0=", beta0, " beta1=", beta1
-			print "a0=", a0, " a1=", a1, " - b0=", b0, " b1=", b1
-			#print self.environment.alphas[a0], "-", self.environment.alphas[a1] , " = ", (self.environment.alphas[a1]-self.environment.alphas[a0])
-			print self.environment.betas[b0], "-", self.environment.betas[b1] , " = ", (self.environment.betas[b1]- self.environment.betas[b0])
-			print self.map
-			for alphatest in np.arange(100.0, 250.0, 10.0):
-				print alphatest, ": ", self.eta(alpha, beta_zenith, alphatest, 90.0)
-			#sys.exit(0)
-		'''
+
 		
 		self.last_R_L_env = R_L_env
 		return R_L_env
 		
 	def lw_terms(self, T_A, T_Gnd, TS, TS_opp, eps_l, eps_l_opp, alpha, beta):
-		# preliminary we use a really simple approximation for R_env
+		# surface on the inside are assumed to radiate according to their
+		# emissivity, but absorb all incoming long wave radiation.
+		# since long wave radiation is absorbed at some point on the inside
+		# anyways (trapped due to greenhouse effect) energy would be lost
+		# if the emissivity != 1 (we'd have to keep track of reflections
+		# to make it more realisitv, but probably wouldn't gain much by that)
 
 		R_L_S	= self.stefan_boltzmann(eps_l, TS)		# lw radiation given of by surface
 		
@@ -233,7 +205,6 @@ class Physics():
 			R_L_opp = 0
 			R_L_env = self.R_L_env(T_A, T_Gnd, alpha, beta)
 		else:											# considering inner surface
-			#eps_l_opp = 1.0							# assume: inside is blackbody
 			R_L_opp	= self.stefan_boltzmann(eps_l_opp, TS_opp)
 			R_L_env = 0
 
@@ -258,10 +229,10 @@ class Physics():
 		if beta_zenith==0.0:		# top wall doesnt pick up reflected radiation
 			Ho = H
 			R_S_gnd = 0
-		elif beta_zenith == 90.0:
+		elif beta_zenith == 90.0:	# side walls
 			Ho = H
 			R_S_gnd = self.environment.reflectivity*G
-		elif beta_zenith == 180.0:
+		elif beta_zenith == 180.0:  # bottom wall
 			Ho = 0
 			R_S_gnd = 0 #self.environment.reflectivity*G
 			
