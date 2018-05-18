@@ -116,9 +116,9 @@ class Car:
 					surface_name = self.body[mask_part].surface.values[j]
 					
 					if material_name not in self.materials.ds.name.values:
-						print " fatal error: unknown material in vehicle-configuration file!"
-						print " it is not specified in the dataset of available materials."
-						print " material: {:s}".format(material_name)
+						print(" fatal error: unknown material in vehicle-configuration file!")
+						print(" it is not specified in the dataset of available materials.")
+						print(" material: {:s}".format(material_name))
 						sys.exit(1)
 				
 					material_ds = self.materials.ds[self.materials.ds.name == material_name]
@@ -140,7 +140,7 @@ class Car:
 					wall.add_layer(n_p, layer)
 				
 			if abs(a_eff_check - 1.0) > 0.001:
-				print "warning: effective area of all parts for wall {:n} does not add up to 1!".format(i)
+				print("warning: effective area of all parts for wall {:n} does not add up to 1!".format(i))
 				
 			self.walls.append(wall)
 					

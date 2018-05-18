@@ -1,4 +1,5 @@
 *.pyc
+*.bak
 .eric6project/
 SAT.e4p
 __init__.py

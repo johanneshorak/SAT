@@ -1,4 +1,4 @@
-from reader import Reader
+from .reader import Reader
 import pandas as pa
 
 class Reader_CSV(Reader):
@@ -41,13 +41,13 @@ class Reader_CSV(Reader):
 				fields_missing = True
 
 		if fields_missing:
-			print " missing fields while loading {:s} from {:s}".format(self.type, self.loc)
-			print "  list of missing fields: ", fields_missing_list
+			print(" missing fields while loading {:s} from {:s}".format(self.type, self.loc))
+			print("  list of missing fields: ", fields_missing_list)
 		Reader.fields_available(self, fields_missing)
 
 		
 	def load(self):
-		print "    loading "+self.type
+		print("    loading "+self.type)
 		ds = pa.read_csv(self.loc, sep=self.sep, decimal=self.dec_mark)
 		if 'datetime' in ds.columns and self.type=='forcing':
 			ds.index = pa.to_datetime(ds.datetime)

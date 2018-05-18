@@ -77,11 +77,11 @@ class Layer:
 		i = float(int(self.th / self.options.dx))
 		m = self.th / self.options.dx
 		if i - m > th or i == 0.0:
-			print ""
-			print " fatal error at "
-			print "{:s}".format(self.to_string())
-			print ""
-			print " thickness no integer multiple of dx!"
+			print("")
+			print(" fatal error at ")
+			print("{:s}".format(self.to_string()))
+			print("")
+			print(" thickness no integer multiple of dx!")
 			sys.exit(1)
 		else:
 			self.sl_n = int(i)
@@ -97,10 +97,10 @@ class Layer:
 			self.sublayers_Q_tm1[i] = self.Q0/float(self.sl_n)
 			
 		if np.sum(self.sublayers_Q_tm1) / self.Q0 - 1.0 > th:
-			print " fatal error at"
-			print "{:s}".format(self.to_string())
-			print ""
-			print " sum of sublayer thermal energy does not equal expected energy of a layer!"
-			print " sum of sublayer thermal energies: {:f}".format(np.sum(self.sublayers_Q_tm1))
-			print " expected total energy of layer  : {:f}".format(self.Q0)
+			print(" fatal error at")
+			print("{:s}".format(self.to_string()))
+			print("")
+			print(" sum of sublayer thermal energy does not equal expected energy of a layer!")
+			print(" sum of sublayer thermal energies: {:f}".format(np.sum(self.sublayers_Q_tm1)))
+			print(" expected total energy of layer  : {:f}".format(self.Q0))
 			sys.exit(1)

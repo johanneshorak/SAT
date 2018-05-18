@@ -16,7 +16,7 @@ class Reader:
 	# if not it prints out the missing fields and returns with false
 	def fields_available(self, fields_missing):
 		if fields_missing:
-			print " fatal error while loading data, fields are missing!"
+			print(" fatal error while loading data, fields are missing!")
 			sys.exit(1)
 		
 	# this function must return a panda dataset
