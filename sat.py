@@ -283,11 +283,12 @@ for ts in range(1, n_ts):
 
 							T_im1 = layer.sl_temp(sl-1)
 							
-							T_opp = car.walls[nw_opp].parts[0][-1].sl_temp(car.walls[nw_opp].parts[0][-1].sl_n-1)
+							T_opp         = car.walls[nw_opp].parts[0][-1].sl_temp(car.walls[nw_opp].parts[0][-1].sl_n-1)
 							epsilon_l_opp = car.walls[nw_opp].parts[0][-1].surface.epsilon_l
 							
-							C		= physics.conduction(T_im1, T_i, layer.material.conductivity,  th)
-							R_S_int = 0
+							C		             = physics.conduction(T_im1, T_i, layer.material.conductivity,  th)
+							R_S_int              = 0
+							K_int	             = physics.convection(T_cabin, T_i, 0.0)
 							R_L_int,  R_L_S_int  = physics.lw_terms(
 														frc_T_A[ts],
 														frc_T_Gnd[ts],
@@ -298,7 +299,6 @@ for ts in range(1, n_ts):
 														alpha,
 														beta
 													)
-							K_int	= physics.convection(T_cabin, T_i, 0.0)
 						elif sl == 0 and layer.inner and sn == 1:
 							# sole sublayer is the innermost and faces the interior but has another ajdacent layer outward
 							procedure_applied = "i2"
@@ -306,11 +306,12 @@ for ts in range(1, n_ts):
 							T_im1	= part[nl-1].sl_temp(part[nl-1].sl_n-1) # temperature of next layer outward
 							l_im1	= part[nl-1].material.conductivity
 							
-							T_opp = car.walls[nw_opp].parts[0][-1].sl_temp(car.walls[nw_opp].parts[0][-1].sl_n-1)
+							T_opp         = car.walls[nw_opp].parts[0][-1].sl_temp(car.walls[nw_opp].parts[0][-1].sl_n-1)
 							epsilon_l_opp = car.walls[nw_opp].parts[0][-1].surface.epsilon_l
 
-							C = (T_im1-T_i)*physics.thermal_contact_conductivity(l_i, l_ip1)
-							R_S_int	= 0
+							C                    = (T_im1-T_i)*physics.thermal_contact_conductivity(l_i, l_ip1)
+							R_S_int	             = 0
+							K_int	             = physics.convection(T_cabin, T_i, 0.0)
 							R_L_int,  R_L_S_int  = physics.lw_terms(
 														frc_T_A[ts],
 														frc_T_Gnd[ts],
@@ -321,7 +322,6 @@ for ts in range(1, n_ts):
 														alpha,
 														beta
 													)
-							K_int	= physics.convection(T_cabin, T_i, 0.0)
 						elif sl == sn-1 and not layer.inner and sn > 1:
 							# sublayer is the innermost but doesn't face the interior => faces other layer inwards
 							# => read neccessary thermal properties of this layer and calculate conductivity due to thermal contact. 

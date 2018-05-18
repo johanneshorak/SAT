@@ -51,7 +51,6 @@ def parse_options():
 					  help="begin of simulation date, format: YYYY-MM-DD", metavar=">date<")
 	group_sim.add_option("--time", dest="time", type="string",
 					  help="begin of simulation time, format: HH:MM", metavar=">time<")
-
 	(parser_options, args) = parser.parse_args()
 
 	cl_options = Bunch()
@@ -86,6 +85,8 @@ def parse_options():
 		option_errors+="  please supply location and name of a car general information file\n"
 	if cl_options.body_file is None:
 		option_errors+="  please supply location and name of a car body_file\n"
+	if not "horizon_file" in cl_options:			# a horizon file is no requirement. if not submitted
+		cl_options.horizon_file = None				# it's just ground and sky.
 
 	if option_errors != "":
 		print ""
