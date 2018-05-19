@@ -10,7 +10,8 @@ SAT is a model that calculates the time course of the cabin air temperature with
 2. Make sure the requirements are satisfied (see section requirements)
 3. Create a vehicle configuration
 A vehicle is specified by two files.
-3.1 The general information file contains the following fields:
+
+The general information file contains the following fields:
 
    - code ... a shortcode to identify the vehicle
    - description ... a longer description
@@ -20,7 +21,7 @@ A vehicle is specified by two files.
 
 see as an example the definition file in [./example/car_nowindows_xmpl.csv](./example/car_nowindows_xmpl.csv). It specifies a transport van with shortname 'my_van' that is oriented south. It has the dimensions 2.4x1.9x1.3 m³. Note that the fact that the van is windowless is defined in the car_body definition file.
 
-3.2 he car_body file contains details about how each of the 6 vehicle walls are made up.
+the car_body file contains details about how each of the 6 vehicle walls are made up.
 
    - wall ... integer id of the vehicle wall.  fixed values are: 1.. front, 2..floor, 3..left wall, 4..right wall, 5.. roof, 6..back wall left and right as seen when standing in front of the vehicle.
    - part ... walls may consist of multiple parts, e.g. half of it may be a window while the other half consists of a multi-layered structure. Numbering should start at 1.
@@ -33,6 +34,7 @@ see as an example the definition file in [./example/car_nowindows_xmpl.csv](./ex
 see as an example the car body definition file in [./example/car_body_nowindows_xmpl.csv](./example/car_body_nowindows_xmpl.csv). It specifies how each of the six walls of the vehicle are made up. Each consist of one part, and each of these parts are made up of two layers. One 1mm thick steel layer on the outside, and an insulating layer on the inside. The front side of the vehicle (wall 1) and its roof (wall 5) have a thicker insulation layer than the other walls (5cm compared to 1cm).
 
 4) Create a forcing file
+
 A forcing file contains the state of the atmosphere during the time the simulation is to be run.
 
    - datetime ... Time at which the variables have the respective values. Format YYYY-MM-DD HH:MM:SS, in between the model interpolates linearly to the model time step (usually 1 second).
@@ -45,7 +47,8 @@ A forcing file contains the state of the atmosphere during the time the simulati
 Currently H and T_Gnd have to be specified, however, both can be estimated from T_A, G and v_10 as has been done in Horak et al 2017.
 
 5) Create a scenario file
-This is not necessary, the above information is enough to run the model from command line (while specifying the definition files and, e.g. initial temperature, duration of the model run, ...). A more convinient way to do so is to generate a scenario file that tells the model which definition files should be used for a model run and what values other parameters should have. See, for instance, the scenario file [./example/scenario_xmpl.opt](./example/scenario_xmpl.opt).
+
+The above information is enough to run the model from command line (while specifying the definition files and, e.g. initial temperature, duration of the model run, ...). A more convinient way to do so is to generate a scenario file that tells the model which definition files should be used for a model run and what values other parameters should have. See, for instance, the scenario file [./example/scenario_xmpl.opt](./example/scenario_xmpl.opt).
 
    - outpath ... path where the model output is stored
    - forcing_file ... path and filename of the forcing file
@@ -61,6 +64,7 @@ the example file runs a simulation for the windowless transport van (my_car), fo
     run the model with python3 sat.py -o ./example/scenario_xmpl.opt
 
 6) Model output
+
 The model currently creates the output file sat_cabin_air.csv. It contains the time course of the cabin air temperature for the simulated period and lists the absolute and relative time at which it occurs.
 
 
