@@ -1,0 +1,10 @@
+[settings]
+outpath       = ./example/output
+forcing_file  = ./example/forcing_xmpl.csv
+car_file      = ./example/car_nowindows_xmpl.csv
+body_file     = ./example/car_body_nowindows_xmpl.csv
+
+date       = 2008-08-26
+time       = 10:00
+duration   = 1.0
+T0         = 25.0

@@ -376,7 +376,7 @@ for ts in range(1, n_ts):
                         pass
 
         if ts % options["write_n"] == 0 or ts == 0:
-            wall.debug_to_file(dtime_cur, float(ts)*dt/3600.0, fluxes)
+            #wall.debug_to_file(dtime_cur, float(ts)*dt/3600.0, fluxes)
             pass
 
     car.Q_t = car.Q_tm1 + K_sum
