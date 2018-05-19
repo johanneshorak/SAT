@@ -61,7 +61,9 @@ The above information is enough to run the model from command line (while specif
 
 the example file runs a simulation for the windowless transport van (my_car), for one hour, starting on the 26th of August in 2008 at 10:00. All car components are initialized at a temperature of 25 degree centigrade.
 
-    run the model with python3 sat.py -o ./example/scenario_xmpl.opt
+run the model with 
+
+    python3 sat.py -o ./example/scenario_xmpl.opt
 
 6) Model output
 
