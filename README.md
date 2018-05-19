@@ -3,17 +3,25 @@ SAT is a model that calculates the time course of the cabin air temperature with
 
 **note:**
 
-(i) The model in Horak et al 2017 was originally implemented in C#. For this python3 reimplementation the code was structured more clearly and commented throughout. It reproduces the results from the paper, however a small error in the code was corrected that leads to slightly different results now (see commit history).
+(i) The model in Horak et al 2017 was originally implemented in C#. For this python3 reimplementation the code was structured more clearly and commented throughout. It reproduces the results from the paper, however a small error in the code was corrected that leads to slightly different results. The long wave radiation of the ground was calculated with the T2m air temperature instead of the ground temperature.
 
-(ii) As of now the reimplementation it is not feature complete, I am currently working on a better implementation of how solar radiation transmitted through windows is handled. At the moment only vehicles without windows may be modelled (such as transport vans for instance). Furthermore, additionall to T2m, G and v_10m, the quantities H (diffuse radiation) and T_Gnd need to be present in the forcing files. An equation to estimate H from G is given in Horak et al 2017, while, as a first order approximation, TGnd may be approximated by T2m.
+(ii) As of now the reimplementation it is not feature complete, I am currently working on a better implementation of how solar radiation transmitted through windows is handled. At the moment only vehicles without windows may be modelled (such as transport vans for instance).
 
 ## Quickstart
-1. Download the model
-2. Make sure the requirements are satisfied (see section requirements)
-3. Create a vehicle configuration
+### Download the model
+### Requirements satisfied?
+The model was tested an run under Ubuntu 16. It requires *python 3.6* to run. It should work with windows systems as well, however, I have not tested it so far. It requires the following python packages:
+
+- numpy
+- scipy
+- pandas
+- bunch
+
+### Creating a vehicle configuration
+
 A vehicle is specified by two files.
 
-The general information file contains the following fields:
+* The general information file contains the following fields:
 
    - code ... a shortcode to identify the vehicle
    - description ... a longer description
@@ -23,7 +31,7 @@ The general information file contains the following fields:
 
 see as an example the definition file in [./example/car_nowindows_xmpl.csv](./example/car_nowindows_xmpl.csv). It specifies a transport van with shortname 'my_van' that is oriented south. It has the dimensions 2.4x1.9x1.3 m³. Note that the fact that the van is windowless is defined in the car_body definition file.
 
-the car_body file contains details about how each of the 6 vehicle walls are made up.
+* the car_body file contains details about how each of the 6 vehicle walls are made up.
 
    - wall ... integer id of the vehicle wall.  fixed values are: 1.. front, 2..floor, 3..left wall, 4..right wall, 5.. roof, 6..back wall left and right as seen when standing in front of the vehicle.
    - part ... walls may consist of multiple parts, e.g. half of it may be a window while the other half consists of a multi-layered structure. Numbering should start at 1.
@@ -35,20 +43,20 @@ the car_body file contains details about how each of the 6 vehicle walls are mad
 
 see as an example the car body definition file in [./example/car_body_nowindows_xmpl.csv](./example/car_body_nowindows_xmpl.csv). It specifies how each of the six walls of the vehicle are made up. Each consist of one part, and each of these parts are made up of two layers. One 1mm thick steel layer on the outside, and an insulating layer on the inside. The front side of the vehicle (wall 1) and its roof (wall 5) have a thicker insulation layer than the other walls (5cm compared to 1cm).
 
-4) Create a forcing file
+### Creating a forcing file
 
-A forcing file contains the state of the atmosphere during the time the simulation is to be run.
+* A forcing file contains the state of the atmosphere during the time the simulation is to be run.
 
    - datetime ... Time at which the variables have the respective values. Format YYYY-MM-DD HH:MM:SS, in between the model interpolates linearly to the model time step (usually 1 second).
    - T_A ... The air temperature at 2m in degree centigrade
    - G ... Global radiation in W/m²
-   - H ... Diffuse radiation in W/m² (equation to estimate from G given in Horak et al 2017 - will be automatized in the feature if not defined here).
-   - T_Gnd ... Ground temperature in degree centigrade. (As a first order approximation may use T_A, will be automatized in the feature)
    - v_10 ... wind speed at 10m height in m/s
+   - H ... (optional) Diffuse radiation in W/m² (equation to estimate from G given in Horak et al 2017 - will be automatized in the feature if not defined here).
+   - T_Gnd ... (optional) Ground temperature in degree centigrade. (As a first order approximation may use T_A, will be automatized in the feature)
 
-Currently H and T_Gnd have to be specified, however, both can be estimated from T_A, G and v_10 as has been done in Horak et al 2017.
+H and T_Gnd may be specified if measurements or other model output is available. For Horak et al 2017 T_Gnd was calculated by a separate model (which relies only on T_A, G and v_10 as input parameters). This may be implemented into SAT in the future, but as of now is not.
 
-5) Create a scenario file
+### Creating a scenario file
 
 The above information is enough to run the model from command line (while specifying the definition files and, e.g. initial temperature, duration of the model run, ...). A more convinient way to do so is to generate a scenario file that tells the model which definition files should be used for a model run and what values other parameters should have. See, for instance, the scenario file [./example/scenario_xmpl.opt](./example/scenario_xmpl.opt).
 
@@ -63,11 +71,13 @@ The above information is enough to run the model from command line (while specif
 
 the example file runs a simulation for the windowless transport van (my_car), for one hour, starting on the 26th of August in 2008 at 10:00. All car components are initialized at a temperature of 25 degree centigrade.
 
+### Running the model
+
 run the model with 
 
     python3 sat.py -o ./example/scenario_xmpl.opt
 
-6) Model output
+### Model output
 
 The model currently creates the output file sat_cabin_air.csv. It contains the time course of the cabin air temperature for the simulated period and lists the absolute and relative time at which it occurs.
 
@@ -76,14 +86,7 @@ The model currently creates the output file sat_cabin_air.csv. It contains the t
 If you run into any troubles or have questions, please don't hesitate to file a bug report and/or contact me! I'm happy to help you to get the model to run.
 
 ## Requirements
-### System
-The model was tested an run under Ubuntu 16. It requires *python 3.6* to run. It should work with windows systems as well, however, I have not tested it so far.
 
-### Packages
-- numpy
-- scipy
-- pandas
-- bunch
 
 
 
