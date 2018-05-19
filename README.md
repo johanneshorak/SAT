@@ -6,17 +6,17 @@ SAT is a model that calculates the time course of the cabin air temperature with
 (ii) As of now the reimplementation it is not feature complete, I am currently working on a better implementation of how solar radiation transmitted through windows is handled. At the moment only vehicles without windows may be modelled (such as transport vans for instance). Furthermore, additionall to T2m, G and v_10m, the quantities H (diffuse radiation) and T_Gnd need to be present in the forcing files. An equation to estimate H from G is given in Horak et al 2017, while, as a first order approximation, TGnd may be approximated by T2m.
 
 ## Quickstart
-1) Download the model
-2) Make sure the requirements are satisfied (see section requirements)
-3) Create a vehicle configuration
+1. Download the model
+2. Make sure the requirements are satisfied (see section requirements)
+3. Create a vehicle configuration
 A vehicle is specified by two files.
 3.1 The general information file contains the following fields:
 
-code ... a shortcode to identify the vehicle
-description ... a longer description
-alpha ... the azimuthal orientation of the vehicle front in degree (0.. north, 90..west, 180.. south, 270.. east)
-beta ... the vertical orientation of the vehicle front in degree (90..normal to ground, currently the only option)
-l, w, h ... the dimensions of the vehicle in meters (length, width and height)
+   - code ... a shortcode to identify the vehicle
+   - description ... a longer description
+   - alpha ... the azimuthal orientation of the vehicle front in degree (0.. north, 90..west, 180.. south, 270.. east)
+   - beta ... the vertical orientation of the vehicle front in degree (90..normal to ground, currently the only option)
+   - l, w, h ... the dimensions of the vehicle in meters (length, width and height)
 
 see as an example the definition file in [./example/car_nowindows_xmpl.csv](./example/car_nowindows_xmpl.csv). It specifies a transport van with shortname 'my_van' that is oriented south. It has the dimensions 2.4x1.9x1.3 m³. Note that the fact that the van is windowless is defined in the car_body definition file.
 
