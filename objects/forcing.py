@@ -76,7 +76,7 @@ class Forcing:
             self.ds['T_Gnd'] = self.ds['T_A']
 
         for i in range(0, len(self.ds.index.values)):
-            dtime       = datetime.utcfromtimestamp((self.ds.ix[i].name - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's'))
+            dtime       = datetime.utcfromtimestamp((self.ds.index[i] - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's'))
             self.sun.set_datetime(dtime)
 
             gammas[i] = self.sun.gamma
@@ -86,8 +86,8 @@ class Forcing:
                 k_t = self.ds.ix[i].G / 1366.0            # clearness index
                 self.ds.ix[i,'H'] = self.ds.ix[i].G * (1.400-1.749*k_t*0.177*np.sin(self.sun.gamma))
 
-            Dh[i] = self.ds.ix[i].G-self.ds.ix[i].H
-            v_1[i] = self.ds.ix[i].v_10*np.log(1.0/Environment.z0)/np.log(10.0/Environment.z0)
+            Dh[i] = self.ds.G[i]-self.ds.H[i]
+            v_1[i] = 0 # self.ds.v_1[i]*10*np.log(1.0/Environment.z0)/np.log(10.0/Environment.z0)
 
         self.ds['gamma'] = gammas
         self.ds['psi'] = psis

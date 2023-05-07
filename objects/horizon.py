@@ -17,9 +17,11 @@ class Horizon:
 		if not(csv_loc is None):
 			self.reader = Reader_CSV(csv_loc, self.fields_required, 'horizon')
 			self.ds = self.reader.load()
+			print("     horizon.py: loaded horizon function")
+
 		else:
 			self.ds = pd.DataFrame(columns=['alpha', 'gamma'], data=[[0, 0], [180, 0], [270, 0]])
-		
+			print("     horizon.py: no horizon function loaded")
 
 		
 		
